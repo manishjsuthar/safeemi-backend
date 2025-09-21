@@ -293,7 +293,7 @@ app.post('/generate-qr', async (req, res) => {
     // Payload for QR code (Device Owner provisioning)
     const payload = {
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": "1Sidaa0Ms55ofjBtNTbbB2LUPzx1aqKx7J3jwuNs0DU",
       "android.app.extra.PROVISIONING_DEVICE_PACKAGE_DOWNLOAD_LOCATION": apkUrl,
       "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": EXTRAS
     };
