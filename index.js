@@ -3,6 +3,10 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const QRCode = require('qrcode');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +19,15 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const APK_FILE = 'app-release.apk'; // your release APK filename
+const PACKAGE_NAME = 'com.safeemiclient';
+const RECEIVER = '.MyDeviceAdminReceiver';
+const EXTRAS = { env: 'production' }; // optional extras
+const APK_URL_BASE = 'http://13.233.85.210:3000/uploads/'
 
 // In-memory data storage
 let customers = [
@@ -265,6 +278,52 @@ io.on('connection', (socket) => {
 });
 
 // API Routes
+
+// Utility: compute SHA256 and encode in Base64
+function computeSHA256Base64(filePath) {
+  const fileBuffer = fs.readFileSync(filePath);
+  const hash = crypto.createHash('sha256').update(fileBuffer).digest();
+  return hash.toString('base64');
+}
+
+// Endpoint: Upload APK and generate QR
+app.post('/generate-qr', async (req, res) => {
+  try {
+    const apkPath = path.join(UPLOAD_DIR, APK_FILE);
+
+    if (!fs.existsSync(apkPath)) {
+      console.error('Release APK not found:', apkPath);
+      return;
+    }
+
+    // Compute SHA256 signature of the release APK
+    const signature = computeSHA256Base64(apkPath);
+
+    // Full APK URL accessible by the device
+    const apkUrl = `${APK_URL_BASE}${APK_FILE}`;
+
+    // Payload for QR code (Device Owner provisioning)
+    const payload = {
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": `${PACKAGE_NAME}/${RECEIVER}`,
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": signature,
+      "android.app.extra.PROVISIONING_DEVICE_PACKAGE_DOWNLOAD_LOCATION": apkUrl,
+      "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": EXTRAS
+    };
+
+    // Generate QR code as PNG
+    const qrBuffer = await QRCode.toBuffer(JSON.stringify(payload), {
+      type: 'png',
+      width: 400,
+      color: { dark: '#000000', light: '#FFFFFF' }
+    });
+    res.setHeader('Content-Type', 'image/png');
+    res.send(qrBuffer);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to generate QR code', details: err.message });
+  }
+});
 
 // Get all customers with overdue EMIs
 app.get('/api/customers/overdue', (req, res) => {
