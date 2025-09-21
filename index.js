@@ -25,9 +25,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const APK_FILE = 'app-release.apk'; // your release APK filename
 const PACKAGE_NAME = 'com.safeemiclient';
-const RECEIVER = '.MyDeviceAdminReceiver';
+const RECEIVER = '.EMISafeDeviceAdmin';
 const EXTRAS = { env: 'production' }; // optional extras
 const APK_URL_BASE = 'http://13.233.85.210:3000/uploads/'
+const SIGNATURE_CHECKSUM = "1401f47c79a441606ff2e5857ba88ce6088f2c1796d44d9fc47ee655f533b4ee";
 
 // In-memory data storage
 let customers = [
@@ -296,16 +297,13 @@ app.post('/generate-qr', async (req, res) => {
       return;
     }
 
-    // Compute SHA256 signature of the release APK
-    const signature = computeSHA256Base64(apkPath);
-
     // Full APK URL accessible by the device
     const apkUrl = `${APK_URL_BASE}${APK_FILE}`;
 
     // Payload for QR code (Device Owner provisioning)
     const payload = {
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": `${PACKAGE_NAME}/${RECEIVER}`,
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": signature,
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": SIGNATURE_CHECKSUM,
       "android.app.extra.PROVISIONING_DEVICE_PACKAGE_DOWNLOAD_LOCATION": apkUrl,
       "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": EXTRAS
     };
