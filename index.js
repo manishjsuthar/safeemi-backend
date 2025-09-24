@@ -1,4 +1,3 @@
-// server.js - Minimal Backend Server with Socket.IO
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -857,7 +856,7 @@ app.post("/generate-qr", async (req, res) => {
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
         "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
-        "http://13.233.85.210:3000/uploads/app-release.apk",
+        "http://35.154.227.178:3000/uploads/app-release.apk",
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
       "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
     };
