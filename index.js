@@ -33,71 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
-const APK_FILE = "app-release.apk"; // your release APK filename
-
-// In-memory data storage
-// let customers = [
-//   {
-//     id: 1,
-//     name: "Rajesh Kumar",
-//     phone: "9876543210",
-//     email: "rajesh@example.com",
-//     address: "Jaipur, Rajasthan",
-//     deviceId: "device_001",
-//     deviceStatus: "offline",
-//     lastSeen: null,
-//     loan: {
-//       id: 1,
-//       amount: 50000,
-//       emiAmount: 4500,
-//       tenureMonths: 12,
-//       paidEMIs: 3,
-//       overdueAmount: 9000,
-//       overdueDays: 15,
-//       status: "active",
-//     },
-//   },
-//   {
-//     id: 2,
-//     name: "Priya Sharma",
-//     phone: "9876543211",
-//     email: "priya@example.com",
-//     address: "Delhi, India",
-//     deviceId: "device_002",
-//     deviceStatus: "offline",
-//     lastSeen: null,
-//     loan: {
-//       id: 2,
-//       amount: 75000,
-//       emiAmount: 6800,
-//       tenureMonths: 12,
-//       paidEMIs: 2,
-//       overdueAmount: 13600,
-//       overdueDays: 8,
-//       status: "active",
-//     },
-//   },
-//   {
-//     id: 3,
-//     name: "Amit Singh",
-//     phone: "9876543212",
-//     email: "amit@example.com",
-//     address: "Mumbai, Maharashtra",
-//     deviceId: "device_003",
-//     deviceStatus: "locked",
-//     lastSeen: new Date(Date.now() - 300000), // 5 minutes ago
-//     loan: {
-//       id: 3,
-//       amount: 100000,
-//       emiAmount: 9000,
-//       tenureMonths: 12,
-//       paidEMIs: 1,
-//       overdueAmount: 27000,
-//       overdueDays: 25,
-//       status: "active",
-//     },
-//   },
-// ];
+const APK_FILE = "app-release.apk";
 
 async function updateLastSeen(imei) {
   try {
@@ -113,9 +49,9 @@ async function updateLastSeen(imei) {
       return null;
     }
 
-    return rows[0]; // Updated row
+    return rows[0];
   } catch (error) {
-    console.error('Error updating last_seen:', error);
+    console.error("Error updating last_seen:", error);
     throw error;
   }
 }
@@ -134,14 +70,12 @@ async function getCustomerByDeviceId(id) {
 
     return rows[0];
   } catch (error) {
-    console.error('Error fetching customer:', error);
+    console.error("Error fetching customer:", error);
     throw error;
   }
 }
 
-
 let deviceCommands = [];
-let commandIdCounter = 1;
 
 // Store active connections
 const deviceConnections = new Map();
@@ -154,9 +88,7 @@ io.on("connection", (socket) => {
   socket.on("register_device", async (data) => {
     try {
       const { deviceId } = data;
-      console.log(
-        `Device registration: ${deviceId} for customer ${1}`
-      );
+      console.log(`Device registration: ${deviceId} for customer ${1}`);
 
       const customer = await getCustomerByDeviceId(deviceId);
       if (!customer) {
@@ -168,7 +100,7 @@ io.on("connection", (socket) => {
 
       deviceConnections.set(deviceId, {
         socket,
-        customerId: parseInt(1),
+        customerId: parseInt(customer.id),
         connectedAt: new Date(),
         lastSeen: new Date(),
       });
@@ -238,7 +170,7 @@ io.on("connection", (socket) => {
 
   socket.on("location_update", async (data) => {
     try {
-      console.log("location_update ", data)
+      console.log("location_update ", data);
     } catch (error) {
       console.error("location_update error:", error);
     }
@@ -246,16 +178,18 @@ io.on("connection", (socket) => {
 
   socket.on("command_result", async (data) => {
     try {
-      const { deviceId, commandId, status, result, timestamp } = data;
+      const { deviceId, commandId, status, result } = data;
       console.log(`Command result: ${commandId} - ${result}`);
 
-      const command = deviceCommands.find((cmd) => cmd.id == commandId);
-      if (command) {
-        command.status = status;
-        command.result = result;
-        // command.error = error;
-        command.completedAt = new Date();
-      }
+      const query = `
+        UPDATE command_history
+        SET "updatedAt" = $1, status = $2, result=$3
+        WHERE id=$4
+        RETURNING *;
+      `;
+      const { rows } = await pool.query(query, [new Date(), status, result, commandId]);
+
+      console.log("rowsr3ew ", rows);
 
       // const customer = await getCustomerByDeviceId(deviceId);
       // if (customer && status === "success") {
@@ -269,10 +203,9 @@ io.on("connection", (socket) => {
       io.to("admins").emit("command_completed", {
         deviceId,
         commandId,
-        commandType: command?.commandType,
+        commandType: rows[0]?.commandType,
         status,
         result,
-        // customerName: customer?.name,
       });
     } catch (error) {
       console.error("Command result error:", error);
@@ -332,6 +265,19 @@ function generateEMISchedule(totalEmis, emiAmount, startDate) {
 
   return emiHistory;
 }
+
+app.get("/api/commandHistory", async (req, res) => {
+  try {
+    const deviceId = req.query.deviceId
+    const result = await pool.query(
+      `SELECT c.* FROM command_history as c where "deviceId"=$1 ORDER BY c."updatedAt" DESC`, [deviceId]
+    );
+    res.json(result.rows ?? []);
+  } catch (err) {
+    console.error("Error fetching dealers:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 app.post("/api/customers", async (req, res) => {
   const client = await pool.connect();
@@ -433,7 +379,7 @@ app.get("/api/customers", async (req, res) => {
           paid: e.paid,
           amount: parseFloat(e.amount),
           paid_date: e.paid_date,
-          id: e.id
+          id: e.id,
         }));
 
         let overdueAmount = 0;
@@ -533,19 +479,9 @@ app.put("/api/payemi/:id", async (req, res) => {
       [today, id]
     );
 
-    // const remainingRes = await pool.query(
-    //   `SELECT SUM(amount) as overdue_amount FROM emi_history
-    //    WHERE device_loan_id=$1 AND paid=false`,
-    //   [emi.device_loan_id]
-    // );
-
-    // const remainingOverdue = remainingRes.rows[0].overdue_amount || 0;
-
     res.json({
       success: true,
       emiId: id,
-      // paid_date: today,
-      // remainingOverdue,
     });
   } catch (err) {
     console.error("Error paying EMI:", err);
@@ -657,62 +593,42 @@ app.post("/api/dealers/login", async (req, res) => {
 app.post("/api/device-control/command", async (req, res) => {
   const client = await pool.connect();
   try {
-    const {command, payload, deviceId } = req.body;
+    const { command, payload, deviceId } = req.body;
 
-    // const customerRes = await client.query(
-    //   `SELECT d.id as device_id, dl.id as device_loan_id, dl.status as device_status
-    //    FROM customers c
-    //    JOIN device_loans dl ON dl.customer_id = c.id
-    //    JOIN devices d ON d.id = dl.device_id
-    //    WHERE c.id = $1`,
-    //   [customerId]
-    // );
+    const commandResult = await pool.query(
+      `INSERT INTO command_history(
+      type, status, "createdAt", "updatedAt", "deviceId", result, payload)
+      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+      [
+        command,
+        "pending",
+        new Date(),
+        new Date(),
+        deviceId,
+        "",
+        JSON.stringify(payload),
+      ]
+    );
+    const commandId = commandResult.rows[0].id;
 
-    // if (customerRes.rowCount === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ error: "Customer or device loan not found" });
-    // }
-
-    // const { device_id, device_status } = customerRes.rows[0];
-
-    const device_id = deviceId
-
-    const newCommand = {
-      id: commandIdCounter++,
-      customerId: parseInt(1),
-      deviceId: device_id,
-      commandType: command,
-      payload: payload || {},
-      status: "pending",
-      createdAt: new Date(),
-      completedAt: null,
-      result: null,
-      error: null,
-    };
-
-    deviceCommands.push(newCommand);
-
-    const deviceConnection = deviceConnections.get(device_id);
+    const deviceConnection = deviceConnections.get(deviceId);
 
     if (deviceConnection) {
       deviceConnection.socket.emit("device_command", {
-        commandId: newCommand.id,
+        commandId: commandId,
         command,
         payload: payload || {},
       });
 
       res.json({
         success: true,
-        commandId: newCommand.id,
-        message: `Command ${command} sent to device ${device_id}`,
+        commandId: commandId,
+        message: `Command ${command} sent to device ${deviceId}`,
       });
     } else {
-      newCommand.status = "failed";
-      newCommand.error = "Device not connected";
       res.status(400).json({
         error: "Device not connected",
-        deviceStatus: 'online',
+        deviceStatus: "online",
       });
     }
   } catch (err) {
@@ -721,15 +637,6 @@ app.post("/api/device-control/command", async (req, res) => {
   } finally {
     client.release();
   }
-});
-
-app.get("/api/device-control/commands/:customerId", async (req, res) => {
-  const { customerId } = req.params;
-  const customerCommands = deviceCommands
-    .filter((cmd) => cmd.customerId == customerId)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 20);
-  res.json(customerCommands);
 });
 
 app.get("/api/dashboard/stats/:dealerId", async (req, res) => {
