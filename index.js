@@ -768,15 +768,29 @@ app.post("/generate-qr", async (req, res) => {
 //     // };
 
 
-     const payload = {
-"android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
-  "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
-  "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "EcXGdkYfSBWFxXyr3o3ohVxb/HqhGXgTZ8JjnlPhB2E=",
-  "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
-  "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
-}
+//      const payload = {
+// "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
+//   "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
+//   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "EcXGdkYfSBWFxXyr3o3ohVxb/HqhGXgTZ8JjnlPhB2E=",
+//   "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+//   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+// }
 
+const payload = {
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
+      "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+      "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
+    }
 
+    // const payload = {
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://elasticbeanstalk-ap-south-1-381492090449.s3.ap-south-1.amazonaws.com/app-release.apk",
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmKQFov8uWFt6iM5giPLBd91E2fxH7mXfUztO4=",
+    //   "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+    //   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
+    // }
 
     // Generate QR code as PNG
     const qrBuffer = await QRCode.toBuffer(JSON.stringify(payload), {
