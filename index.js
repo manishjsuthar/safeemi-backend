@@ -196,12 +196,15 @@ io.on("connection", (socket) => {
       //   }
       // }
 
-      io.to("admins").emit(`command_completed`, {
+      io.to("admins").emit(`command_completed-${deviceId}`, {
+        createdAt: new Date(),
+        updatedAt: new Date(),
         deviceId,
-        commandId,
-        commandType: rows[0]?.commandType,
+        id: commandId,
+        type: rows[0]?.commandType,
         status,
         result,
+        payload:{},
       });
     } catch (error) {
       console.error("Command result error:", error);
