@@ -140,12 +140,11 @@ io.on("connection", (socket) => {
       });
 
       socket.join("admins");
-      socket.emit("admin_registration_success", {
-        adminId,
-        adminName,
-        status: "connected",
-        // customers: customers, // Send all customer data
-      });
+      // socket.emit("admin_registration_success", {
+      //   adminId,
+      //   adminName,
+      //   status: "connected",
+      // });
 
       console.log(`Admin ${adminName} (${adminId}) connected`);
     } catch (error) {
@@ -154,7 +153,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Device heartbeat
   socket.on("device_heartbeat", async (data) => {
     try {
       const { deviceId } = data;
@@ -189,8 +187,6 @@ io.on("connection", (socket) => {
       `;
       const { rows } = await pool.query(query, [new Date(), status, result, commandId]);
 
-      console.log("rowsr3ew ", rows);
-
       // const customer = await getCustomerByDeviceId(deviceId);
       // if (customer && status === "success") {
       //   if (command.commandType === "LOCK_DEVICE") {
@@ -200,7 +196,7 @@ io.on("connection", (socket) => {
       //   }
       // }
 
-      io.to("admins").emit("command_completed", {
+      io.to("admins").emit(`command_completed`, {
         deviceId,
         commandId,
         commandType: rows[0]?.commandType,
@@ -224,7 +220,7 @@ io.on("connection", (socket) => {
 
           deviceConnections.delete(deviceId);
 
-          io.to("admins").emit("device_offline", {
+          io.to("admins").emit(`device_offline-${connection.customerId}`, {
             deviceId,
             customerId: connection.customerId,
             customerName: customer?.name,
@@ -757,16 +753,27 @@ app.post("/generate-qr", async (req, res) => {
       return;
     }
 
-    const payload = {
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
-        "com.safeemiclient.receiver.EMISafeDeviceAdmin",
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
-        "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
-        "http://35.154.227.178:3000/uploads/app-release.apk",
-      "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
-      "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
-    };
+    // const payload = {
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
+    //     "com.safeemiclient.receiver.EMISafeDeviceAdmin",
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
+    //     "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
+    //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
+    //     "http://35.154.227.178:3000/uploads/app-release.apk",
+    //   "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+    //   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+//     // };
+
+
+     const payload = {
+"android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "EcXGdkYfSBWFxXyr3o3ohVxb/HqhGXgTZ8JjnlPhB2E=",
+  "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+  "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+}
+
+
 
     // Generate QR code as PNG
     const qrBuffer = await QRCode.toBuffer(JSON.stringify(payload), {
