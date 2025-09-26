@@ -201,7 +201,7 @@ io.on("connection", (socket) => {
         updatedAt: new Date(),
         deviceId,
         id: commandId,
-        type: rows[0]?.commandType,
+        type: rows[0]?.type,
         status,
         result,
         payload:{},
