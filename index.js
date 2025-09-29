@@ -769,9 +769,9 @@ app.post("/generate-qr", async (req, res) => {
 
 
     const payload = {
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.EMISafeDeviceAdmin",
-      "android.app.extra.PROVISIONING_GET_PROVISIONING_MODE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.GetProvisioningModeActivity",
-      "android.app.extra.PROVISIONING_ADMIN_POLICY_COMPLIANCE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.PolicyComplianceActivity",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
+      "android.app.extra.PROVISIONING_GET_PROVISIONING_MODE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/.GetProvisioningModeActivity",
+      "android.app.extra.PROVISIONING_ADMIN_POLICY_COMPLIANCE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/.PolicyComplianceActivity",
       "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
         "company_name": "Safe EMI Client"
       },
@@ -780,6 +780,7 @@ app.post("/generate-qr", async (req, res) => {
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
       "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
     }
+
 
     // const payload = {
     //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
