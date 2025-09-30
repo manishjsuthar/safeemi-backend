@@ -30,7 +30,12 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
+  console.log("IP:", req.ip);
+  console.log("Headers:", req.headers);
+  next();
+}, express.static(path.join(__dirname, "uploads")));
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const APK_FILE = "app-release.apk";
@@ -769,12 +774,7 @@ app.post("/generate-qr", async (req, res) => {
 
 
     const payload = {
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/.EMISafeDeviceAdmin",
-      "android.app.extra.PROVISIONING_GET_PROVISIONING_MODE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/.GetProvisioningModeActivity",
-      "android.app.extra.PROVISIONING_ADMIN_POLICY_COMPLIANCE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/.PolicyComplianceActivity",
-      "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-        "company_name": "Safe EMI Client"
-      },
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.EMISafeDeviceAdmin",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
