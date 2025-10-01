@@ -30,40 +30,12 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  delete req.headers['if-match'];
-  delete req.headers['if-none-match'];
-  delete req.headers['if-unmodified-since'];
-  delete req.headers['if-modified-since'];
+app.use("/uploads", (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
+  console.log("IP:", req.ip);
+  console.log("Headers:", req.headers);
   next();
-});
-// app.use("/uploads", (req, res, next) => {
-//   console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
-//   console.log("IP:", req.ip);
-//   console.log("Headers:", req.headers);
-//   next();
-// }, express.static(path.join(__dirname, "uploads")));
-
-
-app.all("/uploads/:file", (req, res) => {
-  const filePath = path.join(__dirname, "uploads", req.params.file);
-
-  fs.stat(filePath, (err, stat) => {
-    if (err) {
-      console.error("File not found:", err);
-      return res.sendStatus(404);
-    }
-
-    res.writeHead(200, {
-      "Content-Type": "application/vnd.android.package-archive",
-      "Content-Length": stat.size,
-      "Accept-Ranges": "bytes",
-      "Connection": "close"
-    });
-
-    fs.createReadStream(filePath).pipe(res);
-  });
-});
+}, express.static(path.join(__dirname, "uploads")));
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const APK_FILE = "app-release.apk";
