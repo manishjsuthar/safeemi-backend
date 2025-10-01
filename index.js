@@ -30,12 +30,40 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", (req, res, next) => {
-  console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
-  console.log("IP:", req.ip);
-  console.log("Headers:", req.headers);
+app.use((req, res, next) => {
+  delete req.headers['if-match'];
+  delete req.headers['if-none-match'];
+  delete req.headers['if-unmodified-since'];
+  delete req.headers['if-modified-since'];
   next();
-}, express.static(path.join(__dirname, "uploads")));
+});
+// app.use("/uploads", (req, res, next) => {
+//   console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
+//   console.log("IP:", req.ip);
+//   console.log("Headers:", req.headers);
+//   next();
+// }, express.static(path.join(__dirname, "uploads")));
+
+
+app.all("/uploads/:file", (req, res) => {
+  const filePath = path.join(__dirname, "uploads", req.params.file);
+
+  fs.stat(filePath, (err, stat) => {
+    if (err) {
+      console.error("File not found:", err);
+      return res.sendStatus(404);
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "application/vnd.android.package-archive",
+      "Content-Length": stat.size,
+      "Accept-Ranges": "bytes",
+      "Connection": "close"
+    });
+
+    fs.createReadStream(filePath).pipe(res);
+  });
+});
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const APK_FILE = "app-release.apk";
@@ -775,6 +803,8 @@ app.post("/generate-qr", async (req, res) => {
 
     const payload = {
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.EMISafeDeviceAdmin",
+      "android.app.extra.PROVISIONING_GET_PROVISIONING_MODE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.GetProvisioningModeActivity",
+      "android.app.extra.PROVISIONING_ADMIN_POLICY_COMPLIANCE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.PolicyComplianceActivity",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
