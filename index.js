@@ -30,12 +30,40 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", (req, res, next) => {
-  console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
-  console.log("IP:", req.ip);
-  console.log("Headers:", req.headers);
-  next();
-}, express.static(path.join(__dirname, "uploads")));
+// app.use((req, res, next) => {
+//   delete req.headers['if-match'];
+//   delete req.headers['if-none-match'];
+//   delete req.headers['if-unmodified-since'];
+//   delete req.headers['if-modified-since'];
+//   next();
+// });
+// app.use("/uploads", (req, res, next) => {
+//   console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
+//   console.log("IP:", req.ip);
+//   console.log("Headers:", req.headers);
+//   next();
+// }, express.static(path.join(__dirname, "uploads")));
+
+
+app.disable("etag");
+app.disable("x-powered-by");
+
+app.get("/apk", (req, res) => {
+  const filePath = path.join(__dirname, "uploads", "app-release.apk");
+
+  fs.stat(filePath, (err, stat) => {
+    if (err) return res.sendStatus(404);
+
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+    res.setHeader("Content-Length", stat.size);
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Connection", "close");
+
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
+  });
+});
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const APK_FILE = "app-release.apk";
