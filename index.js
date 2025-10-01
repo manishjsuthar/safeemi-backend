@@ -30,13 +30,7 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use((req, res, next) => {
-//   delete req.headers['if-match'];
-//   delete req.headers['if-none-match'];
-//   delete req.headers['if-unmodified-since'];
-//   delete req.headers['if-modified-since'];
-//   next();
-// });
+
 app.disable("x-powered-by");
 app.disable("etag");
 app.use("/uploads", (req, res, next) => {
@@ -47,6 +41,7 @@ app.use("/uploads", (req, res, next) => {
 }, express.static(path.join(__dirname, 'uploads'), {
   setHeaders: (res, path) => {
     res.set('Content-Type', 'application/vnd.android.package-archive');
+    res.set("Accept-Ranges", "bytes");
   }
 }));
 
@@ -789,10 +784,10 @@ app.post("/generate-qr", async (req, res) => {
   try {
     const apkPath = path.join(UPLOAD_DIR, APK_FILE);
 
-    if (!fs.existsSync(apkPath)) {
-      console.error("Release APK not found:", apkPath);
-      return;
-    }
+    // if (!fs.existsSync(apkPath)) {
+    //   console.error("Release APK not found:", apkPath);
+    //   return;
+    // }
 
     // const payload = {
     //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
@@ -811,7 +806,7 @@ app.post("/generate-qr", async (req, res) => {
       "android.app.extra.PROVISIONING_GET_PROVISIONING_MODE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.GetProvisioningModeActivity",
       "android.app.extra.PROVISIONING_ADMIN_POLICY_COMPLIANCE_ACTIVITY_COMPONENT_NAME": "com.safeemiclient/com.safeemiclient.PolicyComplianceActivity",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
-      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4",
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
       "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME": "com.safeemiclient",
