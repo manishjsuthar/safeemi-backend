@@ -48,7 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 app.disable("etag");
 app.disable("x-powered-by");
 
-app.get("/apk", (req, res) => {
+app.get("/uploads/:file", (req, res) => {
   const filePath = path.join(__dirname, "uploads", "app-release.apk");
 
   fs.stat(filePath, (err, stat) => {
