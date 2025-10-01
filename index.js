@@ -37,33 +37,38 @@ app.use(express.urlencoded({ extended: true }));
 //   delete req.headers['if-modified-since'];
 //   next();
 // });
-// app.use("/uploads", (req, res, next) => {
-//   console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
-//   console.log("IP:", req.ip);
-//   console.log("Headers:", req.headers);
-//   next();
-// }, express.static(path.join(__dirname, "uploads")));
-
-
-app.disable("etag");
 app.disable("x-powered-by");
+app.disable("etag");
+app.use("/uploads", (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Request for: ${req.url}`);
+  console.log("IP:", req.ip);
+  console.log("Headers:", req.headers);
+  next();
+}, express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    res.set('Content-Type', 'application/vnd.android.package-archive');
+  }
+}));
 
-app.get("/uploads/:file", (req, res) => {
-  const filePath = path.join(__dirname, "uploads", "app-release.apk");
 
-  fs.stat(filePath, (err, stat) => {
-    if (err) return res.sendStatus(404);
 
-    res.setHeader("Content-Type", "application/vnd.android.package-archive");
-    res.setHeader("Content-Length", stat.size);
-    res.setHeader("Accept-Ranges", "bytes");
-    res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Connection", "close");
+// app.get("/uploads/:file", (req, res) => {
+//   const fileName = req.params.file
+//   const filePath = path.join(__dirname, "uploads", fileName);
 
-    const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
-  });
-});
+//   fs.stat(filePath, (err, stat) => {
+//     if (err) return res.sendStatus(404);
+
+//     res.setHeader("Content-Type", "application/vnd.android.package-archive");
+//     res.setHeader("Content-Length", stat.size);
+//     res.setHeader("Accept-Ranges", "bytes");
+//     res.setHeader("Cache-Control", "no-store");
+//     res.setHeader("Connection", "close");
+
+//     const stream = fs.createReadStream(filePath);
+//     stream.pipe(res);
+//   });
+// });
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const APK_FILE = "app-release.apk";
@@ -791,14 +796,14 @@ app.post("/generate-qr", async (req, res) => {
 
     // const payload = {
     //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
-    //     "com.safeemiclient.receiver.EMISafeDeviceAdmin",
+    //     "com.safeemiclient/.EMISafeDeviceAdmin",
     //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
     //     "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
     //   "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
     //     "http://35.154.227.178:3000/uploads/app-release.apk",
     //   "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
     //   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
-//     // };
+    // };
 
 
     const payload = {
@@ -808,8 +813,36 @@ app.post("/generate-qr", async (req, res) => {
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "http://35.154.227.178:3000/uploads/app-release.apk",
       "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "FAH0fHmkQWBv8uWFe6iM5giPLBeW1E2fxH7mVfUztO4=",
       "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
-      "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
+      "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME": "com.safeemiclient",
+      "android.app.extra.PROVISIONING_LOCALE": "en_US",
+      "android.app.extra.PROVISIONING_USE_MOBILE_DATA": false,
+      "android.app.extra.PROVISIONING_TIME_ZONE": "Asia/Kolkata",
     }
+
+    const payload2 = {
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
+        "com.miradore.client.v2/com.miradore.client.admin.AdminReceiver",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM":
+        "T4WREqLLTa8BsW21s8pWERg86yQVuwTDN5I8ZFWl3EY",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM_SHA1":
+        "k-CkLmWUvEJvfo-ZRA3dIkjJSS4",
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
+        "https://gerwconline.blob.core.windows.net/public/mdonline_b454.apk",
+      "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+      "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": false,
+      "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME":
+        "com.miradore.client.v2",
+      "android.app.extra.PROVISIONING_LOCALE": "en_US",
+      "android.app.extra.PROVISIONING_TIME_ZONE": "Europe/Helsinki",
+      "android.app.extra.PROVISIONING_USE_MOBILE_DATA": false,
+      "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+        RegistrationKey: "WMTtLfwgwmFrPWDlThZmAw==",
+        EnrollmentKey: "b0a0ad30-3f0b-4551-9934-39b2faddae60",
+        SiteIdentifier: "10287f97-4413-4c41-bff4-e8f42018bb01",
+        ProvisioningMode: 1,
+      },
+    };
 
 
     // const payload = {
